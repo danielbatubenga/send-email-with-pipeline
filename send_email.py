@@ -10,7 +10,7 @@ def get_last_commit_author_email():
 smtp_server = 'smtp.office365.com'
 smtp_port = 587
 username = 'danielbatubenga@outlook.com'
-password = ''
+password = 'pa$$w0rd@@12'
 
 # Verificação das credenciais
 if not username or not password:
