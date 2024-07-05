@@ -30,18 +30,22 @@ body = f'O commit mais recente foi feito por {to_email}'
 smtp_obj = smtplib.SMTP(smtp_server, smtp_port)
 smtp_obj.starttls()  # Iniciar conexão TLS
 
-# Login no servidor SMTP
+# Login no servidor SMTP com tratamento de erros
 try:
     smtp_obj.login(username, password)
 except smtplib.SMTPAuthenticationError as e:
     print(f'Falha ao autenticar: {e}')
     smtp_obj.quit()
     exit(1)
+except Exception as e:
+    print(f'Erro ao conectar ao servidor SMTP: {e}')
+    smtp_obj.quit()
+    exit(1)
 
 # Criar mensagem de e-mail
 msg = f'From: {from_email}\nTo: {to_email}\nSubject: {subject}\n\n{body}'
 
-# Envio do e-mail
+# Envio do e-mail com tratamento de erros
 try:
     smtp_obj.sendmail(from_email, to_email, msg)
     print(f'E-mail enviado com sucesso para: {to_email}')
