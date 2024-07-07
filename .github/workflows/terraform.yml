@@ -33,4 +33,4 @@ jobs:
           #SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           #SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_USERNAME: danielbatubenga@outlook.com
-          SMTP_PASSWORD: pa$$w0rd@@12
+          SMTP_PASSWORD: bbsoykxtchzbskgf
