@@ -1,25 +1,36 @@
-name: Send Email on Commit
+name: Send Email
 
 on:
   push:
     branches:
-      - main  # Substitua pelo nome da sua branch principal
+      - main
 
 jobs:
-  send-email:
+  send_email:
     runs-on: ubuntu-latest
 
-    container:
-      image: python:3.9  # Imagem Docker com Python 3.9
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Run Python script to send email
-        run: python send_email.py  # Substitua pelo nome do seu arquivo Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-      - name: Cleanup
+      - name: Install dependencies
         run: |
-          rm -rf ~/.cache/pip
+          python -m pip install --upgrade pip
+          pip install secure-smtplib
 
+      - name: Run email script
+        run: python send_email.py
+        env:
+          TO_EMAIL: daniel.batubenga@gmail.com
+          FROM_EMAIL: danielbatubenga@outlook.com
+          SMTP_SERVER: smtp.office365.com
+          SMTP_PORT: 587
+          #SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          #SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_USERNAME: danielbatubenga@outlook.com
+          SMTP_PASSWORD: pa$$w0rd@@12
