@@ -21,16 +21,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install secure-smtplib
+          pip install requests
 
       - name: Run email script
         run: python send_email.py
         env:
-          TO_EMAIL: daniel.batubenga@gmail.com
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
           FROM_EMAIL: danielbatubenga@outlook.com
           SMTP_SERVER: smtp.office365.com
           SMTP_PORT: 587
-          #SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          #SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_USERNAME: danielbatubenga@outlook.com
           SMTP_PASSWORD: bbsoykxtchzbskgf
