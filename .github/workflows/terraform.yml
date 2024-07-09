@@ -33,8 +33,11 @@ jobs:
       - name: Check if Resource Group Exists
         id: check
         run: |
-          az group show --name terraform-rg --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }} > /dev/null 2>&1
-          echo "::set-output name=group_exists::$(if [ $? -eq 0 ]; then echo 'true'; else echo 'false'; fi)"
+          if az group show --name $RESOURCE_GROUP_NAME --subscription $ARM_SUBSCRIPTION_ID; then
+            echo "::set-output name=group_exists::true"
+          else
+            echo "::set-output name=group_exists::false"
+          fi
       
       - name: Set up Python
         uses: actions/setup-python@v2
