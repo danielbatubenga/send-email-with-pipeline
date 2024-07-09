@@ -69,6 +69,12 @@ jobs:
     needs: validate-resource-group
     runs-on: ubuntu-latest
     if: ${{ needs.validate-resource-group.outputs.group_exists == 'false' }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      RESOURCE_GROUP_NAME: 'terraform-rg'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
