@@ -74,7 +74,7 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      RESOURCE_GROUP_NAME: 'terraform-rg'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -87,3 +87,47 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+
+      - name: Upload Terraform State File
+        uses: actions/upload-artifact@v2
+        with:
+          name: terraform-state
+          path: terraform.tfstate
+  
+  
+          
+          
+  sleep-after-create:
+    needs: create-infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sleep for 2 minutes
+        run: sleep 120
+
+  destroy-infrastructure:
+    needs: sleep-after-create
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+  
+        - name: Download Terraform State File
+          uses: actions/download-artifact@v2
+          with:
+            name: terraform-state
+            path: .
+  
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v1
+  
+        - name: Terraform Init
+          run: terraform init
+  
+        - name: Terraform Destroy
+          run: terraform destroy -auto-approve
