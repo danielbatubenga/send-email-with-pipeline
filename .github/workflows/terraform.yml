@@ -1,4 +1,4 @@
-name: Send Email
+name: Deploy Infrastructure
 
 on:
   push:
@@ -6,25 +6,50 @@ on:
       - main
 
 jobs:
-  send_email:
+  validate-resource-group:
     runs-on: ubuntu-latest
-
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      RESOURCE_GROUP_NAME: 'terraform-rg'
+      
+    outputs:
+      group_exists: ${{ steps.check.outputs.group_exists }}
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Login to Azure CLI
+        run: |
+          az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+
+
+      - name: Check if Resource Group Exists
+        id: check
+        run: |
+          az group show --name terraform-rg --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }} > /dev/null 2>&1
+          echo "::set-output name=group_exists::$(if [ $? -eq 0 ]; then echo 'true'; else echo 'false'; fi)"
+      
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-
+  
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Run email script
-        run: python send_email.py
+      - name: Send Email if Resource Group Exists
+        if: ${{ steps.check.outputs.group_exists == 'true' }}
+        run: |
+          python send_email.py "Resource Group Exists" "The resource group already exists. Waiting for removal to try again."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -34,3 +59,22 @@ jobs:
           SMTP_PORT: 587
           SMTP_USERNAME: danielbatubenga@outlook.com
           SMTP_PASSWORD: bbsoykxtchzbskgf
+          #SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          #SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+
+  create-infrastructure:
+    needs: validate-resource-group
+    runs-on: ubuntu-latest
+    if: ${{ needs.validate-resource-group.outputs.group_exists == 'false' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
