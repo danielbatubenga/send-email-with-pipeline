@@ -13,7 +13,6 @@ def get_commit_author_email(repo, commit_sha, github_token):
     response.raise_for_status()
     commit_data = response.json()
     email = commit_data['commit']['author']['email']
-    print(f"Author email: {email}")
     return email
 
 def send_email(subject, body, to_address, from_address, smtp_server, smtp_port, username, password):
@@ -21,7 +20,19 @@ def send_email(subject, body, to_address, from_address, smtp_server, smtp_port, 
     msg['From'] = from_address
     msg['To'] = to_address
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'html'))
+    
+    # HTML content for the email body
+    html = f"""
+    <html>
+    <body>
+        <p>Dear User,</p>
+        <p>The Azure resource group you want to create already exists.</p>
+        <p>Please wait for its deletion and try again later.</p>
+        <p>Thank you.</p>
+    </body>
+    </html>
+    """
+    msg.attach(MIMEText(html, 'html'))
 
     try:
         server = smtplib.SMTP(smtp_server, smtp_port)
@@ -40,21 +51,13 @@ if __name__ == "__main__":
     commit_sha = os.getenv('GITHUB_SHA')
     github_token = os.getenv('GITHUB_TOKEN')
 
-    subject = "Assunto do Email"
-    body = "Corpo do email. Pode incluir <b>HTML</b> se necessário."
+    subject = "Notification: Azure Resource Group Already Exists"
     from_address = os.getenv('FROM_EMAIL')
     smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = int(os.getenv('SMTP_PORT'))
+    smtp_port = os.getenv('SMTP_PORT')
     username = os.getenv('SMTP_USERNAME')
     password = os.getenv('SMTP_PASSWORD')
 
-    print(f"Repo: {repo}")
-    print(f"Commit SHA: {commit_sha}")
-    print(f"From address: {from_address}")
-    print(f"SMTP server: {smtp_server}")
-    print(f"SMTP port: {smtp_port}")
-    print(f"SMTP username: {username}")
-
     to_address = get_commit_author_email(repo, commit_sha, github_token)
 
-    send_email(subject, body, to_address, from_address, smtp_server, smtp_port, username, password)
+    send_email(subject, "", to_address, from_address, smtp_server, smtp_port, username, password)
