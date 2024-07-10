@@ -3,7 +3,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 import requests
-import sys
 
 def get_commit_author_email(repo, commit_sha, github_token):
     url = f"https://api.github.com/repos/{repo}/commits/{commit_sha}"
@@ -40,8 +39,8 @@ if __name__ == "__main__":
     commit_sha = os.getenv('GITHUB_SHA')
     github_token = os.getenv('GITHUB_TOKEN')
 
-    subject = sys.argv[1]
-    body = sys.argv[2]
+    subject = "Assunto do Email"
+    body = "Corpo do email. Pode incluir <b>HTML</b> se necessário."
     from_address = os.getenv('FROM_EMAIL')
     smtp_server = os.getenv('SMTP_SERVER')
     smtp_port = os.getenv('SMTP_PORT')

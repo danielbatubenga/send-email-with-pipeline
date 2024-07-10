@@ -1,4 +1,4 @@
-name: Check Resource Group and Send Email
+name: Send Email on Commit
 
 on:
   push:
@@ -6,57 +6,32 @@ on:
       - main
 
 jobs:
-  check-and-notify:
+  send_email:
     runs-on: ubuntu-latest
-    env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      RESOURCE_GROUP_NAME: 'terraform-rg'
 
-    outputs:
-      group_exists: ${{ steps.check.outputs.group_exists }}
-      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Login to Azure CLI
-        run: |
-          az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
 
-      - name: Check if Resource Group Exists
-        id: check
-        run: |
-          if az group show --name $RESOURCE_GROUP_NAME --subscription $ARM_SUBSCRIPTION_ID; then
-            echo "::set-output name=group_exists::true"
-          else
-            echo "::set-output name=group_exists::false"
-          fi
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-  
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
-
-      - name: Send Email if Resource Group Exists
-        if: ${{ steps.check.outputs.group_exists == 'true' }}
-        run: |
-          python send_email.py "Resource Group Exists" "The resource group already exists. Waiting for removal to try again."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_SHA: ${{ github.sha }}
-          FROM_EMAIL: danielbatubenga@outlook.com
-          SMTP_SERVER: smtp.office365.com
-          SMTP_PORT: 587
-          SMTP_USERNAME: danielbatubenga@outlook.com
-          SMTP_PASSWORD: bbsoykxtchzbskgf
+    - name: Run email script
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        FROM_EMAIL: danielbatubenga@outlook.com
+        SMTP_SERVER: smtp.office365.com
+        SMTP_PORT: 587
+        SMTP_USERNAME: danielbatubenga@outlook.com
+        SMTP_PASSWORD: bbsoykxtchzbskgf
+      run: |
+        python send_email.py
