@@ -13,6 +13,7 @@ def get_commit_author_email(repo, commit_sha, github_token):
     response.raise_for_status()
     commit_data = response.json()
     email = commit_data['commit']['author']['email']
+    print(f"Author email: {email}")
     return email
 
 def send_email(subject, body, to_address, from_address, smtp_server, smtp_port, username, password):
@@ -43,9 +44,16 @@ if __name__ == "__main__":
     body = "Corpo do email. Pode incluir <b>HTML</b> se necessário."
     from_address = os.getenv('FROM_EMAIL')
     smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT')
+    smtp_port = int(os.getenv('SMTP_PORT'))
     username = os.getenv('SMTP_USERNAME')
     password = os.getenv('SMTP_PASSWORD')
+
+    print(f"Repo: {repo}")
+    print(f"Commit SHA: {commit_sha}")
+    print(f"From address: {from_address}")
+    print(f"SMTP server: {smtp_server}")
+    print(f"SMTP port: {smtp_port}")
+    print(f"SMTP username: {username}")
 
     to_address = get_commit_author_email(repo, commit_sha, github_token)
 
